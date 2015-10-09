@@ -1,0 +1,222 @@
+
+import sys
+import os
+import string as s
+import json 
+from pprint import *
+from collections import defaultdict
+from operator import getitem
+from sqlalchemy import *
+from datetime import *
+import psycopg2
+import dictgenerateupdate as gu
+import json
+
+class autoviv(dict):
+    """Implementation of perl's autovivification feature."""
+    def __getitem__(self, item):
+        try:
+            return dict.__getitem__(self, item)
+        except KeyError:
+            value = self[item] = type(self)()
+            return value
+
+# visittree=autoviv()
+
+def tree(): return defaultdict(tree)
+
+def dicts(t): return {k: dicts(t[k]) for k in t}
+
+visittree=autoviv()
+  
+instructions=json.loads(open('vtmininginstructions.json').read())  
+            
+# print 'instructions', json.dumps(instructions)
+            
+db = create_engine("postgresql+psycopg2://YOURLI:YOURPW@ip/dw")
+db_con=db.connect()
+
+selstr=instructions["allresults"]
+ctstr=instructions["getcount"]
+pagecol=instructions["pagecolumn"]
+headerarray=instructions['headerarray']
+uniquegrain=instructions['uniquegrain']
+critpages=instructions['critpages']	
+# critindlist=critpages['critindices'][pervalue]
+# critpagelist=critpages['critpages'][pervalue]
+textsearchinjects=instructions['textsearchinjects']
+tabletodistinct=instructions['tabletodistinct']
+arraytodistinct=instructions['arraytodistinct']
+
+pagecolindex=headerarray.index(pagecol)
+
+addlpages=[]
+
+for k in textsearchinjects.keys():
+	tempstr='select distinct '+pagecol+' from '+ tabletodistinct+' where upper(pagenameclean) like \'%%'+textsearchinjects[k]+'%%\''
+	print 'tempstr', tempstr
+	
+	inj=db_con.execute(tempstr)
+	
+	for row in inj:
+		addlpages.append(row[0])
+
+# print 'addlpages',addlpages
+
+result=db_con.execute(selstr)
+
+resultlen=db_con.execute(ctstr)
+
+resultlen=[row for row in resultlen][0][0]
+
+print resultlen
+
+def returnumarray(ary,headarry):
+	temparry=[]
+	for el in ary:
+		if el in temparry==False:
+			temparry.append(headarry.index(el))
+
+	return temparry
+
+# https://gist.github.com/hrldcpr/2012250
+
+def createdistinctkeys(arraytodistinct,t): #FUNCTION TO STORE SETS OF DISTINCT VALUE COMBOS
+											#THESE WILL BE USED TO GENERATE PRE-BUILT DICTIONARIES
+											#SO THAT WE DONT WASTE CYCLES EVALUATING THEIR EXISTENCE
+											#IN THE DICTIONARY WHEN WE CRAWL ROWS
+
+	distinctstr=' '
+
+	for el in arraytodistinct:
+		distinctstr=distinctstr+' '+el
+
+	distinctstr=distinctstr.strip(' ').replace(' ',',')
+
+	selstr='select distinct '+distinctstr+' from '+ tabletodistinct 
+	distresult=db_con.execute(selstr)
+
+	distresultary=[]
+	
+	for row in  distresult:
+		templist=[]
+		for col in row:
+			templist.append(col)
+		distresultary.append(templist)
+	
+	for el in distresultary:  #THIS FUNCTION WORKS LIKE AUTOVIV,
+								#BUT USED WITH ADD() FUNCTION WILL BUILD FROM ARBITRARY ARRAY
+								#WE NEED THIS SO THAT USER CAN INPUT ARBITRARY LIST OF 
+								#BREAKOUT VARIABLES WITHOUT RECODING 				
+		temparry=[]
+		for i in el:
+			if not isinstance(i,basestring):
+				i=str(i)
+			temparry.append(i)
+	
+# 		print 'temparry',temparry
+		
+		t=gu.add(visittree,temparry)
+
+
+	
+def	evalstring(t,evalstr,row):
+
+		pervalue=row[headerarray.index(critpages['pervalue'])]
+# 		print 'pervalue', pervalue
+		
+		critindlist=critpages['critindices'][pervalue]	
+		
+		combinedlist=critindlist+addlpages
+					
+		strfordict=[]
+		
+# 		print 'combindelist',combinedlist
+# 
+# 		print 'evalstr',evalstr
+		
+		for i in evalstr.split(',')[1:len(evalstr.split(','))-1]:	
+# 			print 'i',i, type(i)
+			if int(i) in combinedlist:
+# 				print 'item', i,' isinlist'
+				strfordict.append(i)
+		
+		templist=[]
+		templist.append(','.join(strfordict))
+		
+		return templist
+		
+		
+def createjson(t,instructions):
+	
+	prevbreakoutvartest=''
+	
+	pagelist=','
+
+	prevuniquegraintest=''	
+			
+	rowct=0
+	pagelist=''
+
+# 	print 'arraytodistinct',arraytodistinct
+		
+	for row in result:
+		uniquegraintest=''
+		breakoutvartest=''
+		
+#  condition for current visitorid and visitnumber
+		for col in uniquegrain: #store vals			
+			uniquegraintest+=str(row[headerarray.index(col)])+'|'
+		
+		if prevuniquegraintest==uniquegraintest:
+# 			print 'case1'
+			pagelist+=','+str(row[pagecolindex])
+# 			ALSO PUT TIMES
+		elif rowct!=0:
+			print 'case2'
+			pagelist+=','			
+			pathkey=evalstring(t,pagelist,row)
+			print 'pathkey',pathkey
+			templist=arraytodistinct+pathkey
+			print 'templist', templist
+			gu.add(t,templist,'u',1)
+		else:
+# 			print 'case3'
+			pagelist=','+str(row[pagecolindex])
+		
+		if rowct==resultlen-1:
+			distinctgrain=[]
+			for col in arraytodistinct:
+				tempstr1=row[headerarray.index(col)]
+				if not isinstance(tempstr1,basestring):
+					tempstr1=str(tempstr1)
+				distinctgrain.append(tempstr1)
+			print 'distinctgrain',distinctgrain
+			print 'case4'
+			pagelist+=','
+			pathkey=evalstring(t,pagelist,row)
+			print 'pathkey',pathkey
+			templist=distinctgrain+pathkey
+			print 'templist', templist
+			gu.add(t,templist,'u',1)
+
+			
+		prevuniquegraintest=uniquegraintest
+		
+		rowct+=1
+				
+createdistinctkeys(arraytodistinct,visittree)				
+
+createjson(visittree,instructions)
+
+print 'visittree',visittree, visittree.keys()
+
+
+
+
+
+
+
+
+
+
