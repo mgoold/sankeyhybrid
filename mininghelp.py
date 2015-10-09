@@ -1,42 +1,48 @@
 
-class autoviv(dict):
-    """Implementation of perl's autovivification feature."""
-    def __getitem__(self, item):
-        try:
-            return dict.__getitem__(self, item)
-        except KeyError:
-            value = self[item] = type(self)()
-            return value
+# pathkey ['1843', '1843', '1843', '1859', '1859', '1859', '402', '402', '1859', '1843', '1843']
 
-def add(t,path,genorupdate='g',val=0):
+import json
+
+def add(t,path,genorupdate='g',val=0,keynames=None,keyvals=None):
 	if genorupdate=='g':
 		for node in path:
 			t = t[node]	
 	elif genorupdate=='i':
+		print 'ininsert'
+		rowct2=0;
+		print 'rowlen', len(path)
 		for node in path:
-			if path.index(node)==len(path)-1:
-				t[node]=val
+			print 'rowct2',rowct2, node, val
+			if rowct2==len(path)-1:
+				print 'assigning totals'
+				t[node]['total']=val
+				if keynames!=None:
+					for k in keynames:
+						 t[node]['breakouts'][k][keyvals[keynames.index(k)]]=val	
+			rowct2+=1							 
 			t = t[node]		
+		print 't', json.dumps(t)	
 	elif genorupdate=='u':
-		print 'path',path,'val',val
-		for node in path:
-			print 'index',path.index(node)
-			if path.index(node)==0:
-				print 'case1', node, t[node]
-				if node in t.keys():
-					tempt=t[node]				
-			elif path.index(node)==len(path)-1:
-				if tempt.get(node)==None:
-					print 'case2', node
-					add(t,path,'i',val)
-				elif node in tempt.keys():
-					print 'case2b', node
-					tempval=tempt[node]+val
-					add(t,path,'i',tempval)
+		print 'in update'
+		rowct=0;
+		for node in path:			
+			if rowct==0:
+				print 'rowct==0'
+				temppath=[node]
+				tempt=t[node]	
 			else:
-				print 'case3', node, tempt[node]
-				if node in tempt.keys():
-					tempt=tempt[node]	
-
-	
-	
+				print 'rowct>0'
+				temppath=path[0:rowct]
+				tempt=tempt[node]				
+			print 'tempt.get(node)',node, tempt, tempt.get(node)
+			
+			if tempt.get('total')==None:
+				print 'insertval', keynames,keyvals
+				add(t,temppath,'i',val,keynames,keyvals)
+			else:
+				print 'updateval'
+				tempval=tempt['total']
+				print 'tempval total',tempval
+				tempval+=1
+				add(t,temppath,'i',tempval,keynames,keyvals) 
+			rowct+=1
