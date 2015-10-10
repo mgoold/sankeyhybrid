@@ -8,9 +8,9 @@ def add(t,path,genorupdate='g',val=0,keynames=None,keyvals=None):
 		for node in path:
 			t = t[node]	
 	elif genorupdate=='i':
-		print 'ininsert'
+		print 'ininsert', path
 		rowct2=0;
-		print 'rowlen', len(path)
+# 		print 'rowlen', path, len(path)
 		for node in path:
 			print 'rowct2',rowct2, node, val
 			if rowct2==len(path)-1:
@@ -24,20 +24,23 @@ def add(t,path,genorupdate='g',val=0,keynames=None,keyvals=None):
 		print 't', json.dumps(t)	
 	elif genorupdate=='u':
 		print 'in update'
+		print 'pathinupdate',path
 		rowct=0;
-		for node in path:			
+		temppath=[]
+		for node in path:
+			temppath.append(node)	
+			print 'rowct in update', rowct		
 			if rowct==0:
 				print 'rowct==0'
-				temppath=[node]
 				tempt=t[node]	
 			else:
 				print 'rowct>0'
-				temppath=path[0:rowct]
-				tempt=tempt[node]				
+				tempt=tempt[node]		
+			print 'temppath',temppath	
 			print 'tempt.get(node)',node, tempt, tempt.get(node)
 			
 			if tempt.get('total')==None:
-				print 'insertval', keynames,keyvals
+				print 'insertval', keynames,keyvals,type(temppath)
 				add(t,temppath,'i',val,keynames,keyvals)
 			else:
 				print 'updateval'
