@@ -33,7 +33,7 @@ instructions=json.loads(open('vtmininginstructions.json').read())
             
 # print 'instructions', json.dumps(instructions)
             
-db = create_engine("postgresql+psycopg2://li:pw@ip:host/dw")
+db = create_engine("postgresql+psycopg2://tableau:LineGraphMinionChart@10.211.26.100:5439/ancestry")
 db_con=db.connect()
 
 selstr=instructions["allresults"]
@@ -55,7 +55,7 @@ addlpages=[]
 
 for k in textsearchinjects.keys():
 	tempstr='select distinct '+pagecol+' from '+ tabletodistinct+' where upper(pagenameclean) like \'%%'+textsearchinjects[k]+'%%\''
-	print 'tempstr', tempstr
+# 	print 'tempstr', tempstr
 	
 	inj=db_con.execute(tempstr)
 	
@@ -63,6 +63,7 @@ for k in textsearchinjects.keys():
 		addlpages.append(row[0])
 
 # print 'addlpages',addlpages
+# print 'selstr', selstr
 
 result=db_con.execute(selstr)
 
@@ -70,7 +71,7 @@ resultlen=db_con.execute(ctstr)
 
 resultlen=[row for row in resultlen][0][0]
 
-print 'resultlen',resultlen
+# print 'resultlen',resultlen
 
 def returnumarray(ary,headarry):
 	temparry=[]
@@ -94,7 +95,7 @@ def createdistinctkeys(arraytodistinct,t): #FUNCTION TO STORE SETS OF DISTINCT V
 
 	distinctstr=distinctstr.strip(' ').replace(' ',',')
 
-	selstr='select distinct '+distinctstr+' from '+ tabletodistinct 
+# 	selstr='select distinct '+distinctstr+' from '+ tabletodistinct 
 	distresult=db_con.execute(selstr)
 
 	distresultary=[]
@@ -120,39 +121,32 @@ def createdistinctkeys(arraytodistinct,t): #FUNCTION TO STORE SETS OF DISTINCT V
 		t=gu.add(visittree,temparry)
 
 def getentrypoint(evalstr):
-	print 'entrypoint', entrypoint, type(entrypoint)
-	print 'evalstr',evalstr, type(evalstr)
 	entrypt=evalstr.index(entrypoint)
-# 	try:	
-# 		entrypt=evalstr.index(entrypoint)  #start from first page user enters test			
-# 	except:
-# 		e = sys.exc_info()[0]
-# 		el=sys.exc_traceback.tb_lineno
-# 
-# 		print 'You have a session where entry page was not found'
-# 		
-# 		sys.exit()
 	
 	return entrypt
 	
-def	evalstring(evalstr,row):
+def	evalstring(pervalue,evalstr,row):
 	
 		while evalstr.find(',,')>0:
 			evalstr=evalstr.replace(',,',',')
 	
-		print 'evalstr',evalstr
+# 		print 'evalstr',evalstr
 		
 		evalstr2=evalstr[1:len(evalstr)-1].split(',')
 		evalstr2=[int(i) for i in evalstr2]
 		firstentry=getentrypoint(evalstr2)
 
-		print 'firstentry',firstentry
+# 		print 'finalevalstr', evalstr2[firstentry:len(evalstr2)]
 
-		pervalue=row[headerarray.index(critpages['pervalue'])]
+# 		print 'firstentry',firstentry
+		
+# 		print 'pervalue', pervalue
 		
 		critindlist=critpages['critindices'][pervalue]	
 		
 		combinedlist=critindlist+addlpages
+		
+# 		print 'combinedlist',combinedlist
 					
 		strfordict=[]
 		
@@ -164,11 +158,11 @@ def	evalstring(evalstr,row):
 		
 		
 def createjson(t,instructions):
-	print 'increatejson'
+# 	print 'increatejson'
 	prevbreakoutvartest=''
 	
 	pagelist=','
-
+	
 	prevuniquegraintest=''	
 			
 	rowct=0
@@ -177,55 +171,56 @@ def createjson(t,instructions):
 	for row in result:
 		uniquegraintest=''
 		breakoutvartest=''
-# 		print 'rowct',rowct
+# 		print 'createjsonrowct',rowct, row[pagecolindex]
 		
 #  condition for current visitorid and visitnumber
 		for col in uniquegrain: #store vals			
 			uniquegraintest+=str(row[headerarray.index(col)])+'|'
+		
+# 		print 'prevuniquegraintest,uniquegraintest',prevuniquegraintest,uniquegraintest
 		
 		if prevuniquegraintest==uniquegraintest:
 # 			print 'case1'
 			pagelist+=','+str(row[pagecolindex])
 # 			ALSO PUT TIMES
 		elif rowct!=0: 
-			print 'case2'
-			distinctgrain=[]
-			for col in arraytodistinct:
-				tempstr1=row[headerarray.index(col)]
-				if not isinstance(tempstr1,basestring):
-					tempstr1=str(tempstr1)
-				distinctgrain.append(tempstr1)
-			print 'distinctgrain',distinctgrain
+# 			print 'case2'
+# 			print 'distinctgrain',distinctgrain
 			pagelist+=','
-			pathkey=evalstring(pagelist,row)
-			print 'pathkey',pathkey
-			gu.add(t,pathkey,'u',1,arraytodistinct,distinctgrain)
+			pathkey=evalstring(pervalue,pagelist,row)
+# 			print 'pathkey',pathkey
+# 			print 'add arguments', arraytodistinct,distinctgrain
+			gu.add(t,pathkey,'u',1,1,arraytodistinct,distinctgrain)
+# 			print 'visittree',json.dumps(visittree)
 			pagelist=','+str(row[pagecolindex])
 		else:
 # 			print 'case3'
 			pagelist=','+str(row[pagecolindex])
 		
 		if rowct==resultlen-1:
-			print 'case4'
-			distinctgrain=[]
-			for col in arraytodistinct:
-				tempstr1=row[headerarray.index(col)]
-				if not isinstance(tempstr1,basestring):
-					tempstr1=str(tempstr1)
-				distinctgrain.append(tempstr1)
-			print 'distinctgrain',distinctgrain
+# 			print 'case4'
+# 			print 'distinctgrain',distinctgrain
 			pagelist+=','
-			pathkey=evalstring(pagelist,row)
-			print 'pathkey',pathkey
-			gu.add(t,pathkey,'u',1,arraytodistinct,distinctgrain)
-
+			pathkey=evalstring(pervalue,pagelist,row)
+# 			print 'pathkey',pathkey
+# 			print 'add arguments', arraytodistinct,distinctgrain			
+			gu.add(t,pathkey,'u',1,1,arraytodistinct,distinctgrain)
+# 			print 'visittree',json.dumps(visittree)
+			
+		distinctgrain=[]
+		for col in arraytodistinct:
+			tempstr1=row[headerarray.index(col)]
+			if not isinstance(tempstr1,basestring):
+				tempstr1=str(tempstr1)
+			distinctgrain.append(tempstr1)
+		
+		pervalue=row[headerarray.index(critpages['pervalue'])]
 			
 		prevuniquegraintest=uniquegraintest
 		
 		rowct+=1			
 
 createjson(visittree,instructions)
-
 print 'visittree',json.dumps(visittree)
 
 
