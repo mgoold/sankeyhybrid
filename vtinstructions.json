@@ -1,0 +1,40 @@
+{
+"tabletodistinct":"a.markfvwtesters5", 
+"headerarray":["campaign","tntexperienceid","experience","segment","siteid","visitorid","visitnumber","pagenumber","pagenameclean","pageindex","pageurl","datetime1","seclead"],
+"arraytodistinct":["campaign","experience","segment"],
+"uniquegrain":["siteid","visitorid","visitnumber"],
+"pagecolumn":"pageindex",
+"timecolumn":"seclead",
+"pervalue":"experience",
+"entrypoint":{"Control":402,"Phoenix":402},
+"algorithm":
+{"type":"Sandwich",
+	"endpoint":
+		{
+		"Control": 1926,
+		"Phoenix": 1926
+		},
+	"poi":
+		{
+		"Control": [1859,1843,1862,1844,1864,1840,1861,1847,1850,1858,1854,1863,1750,1848,1845,1856,1846,1852,157,1860,1842,1849,1851,1855,1724,1853,1857,1865,2617,1841],
+		"Phoenix": [1859,1843,1862,1844,1864,1840,1861,1847,1850,1858,1854,1863,1750,1848,1845,1856,1846,1852,157,1860,1842,1849,1851,1855,1724,1853,1857,1865,2617,1841]
+		}
+},
+"critpages":
+{
+	"critindices":
+		{
+		"Control":[402,1940,1922,1941,1942,1938],
+		"Phoenix":[402,1923,1922,1925,1909]},
+	"critpages":
+		{
+		"Control":["Entry","Registration","Payment","Review","WaitForCheckOut","Confirm"],
+		"Phoenix":["Entry","Registration","Payment","Review","Confirm"]
+		}
+},
+"textsearchinjects":{},                            
+"allresults":"select * from  a.markfvwtesters5 order by visitorid, visitnumber, datetime1",
+"getcount":"select count(*) from  a.markfvwtesters5"
+}
+
+
