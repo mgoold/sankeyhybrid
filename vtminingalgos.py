@@ -87,24 +87,24 @@ def	evalstring(evalstr,instructions=None,evalflg='d',pervalue=None,row=None,subs
 				if int(i) in substr:
 					evaldict.append(i)					
 		
-# 		print 'evaldict', evaldict
+## 		print 'evaldict', evaldict
 		
 		return evaldict
 
 
-def buildalgoresults(algo='d',pervalue=None,evaldict,algoinstr,arraytodistinct=None,distinctgrain=None):	
-	pathkey=','.join(substring)
-	
-	if algo=='SandPre': 
-		d['endpoint']=algoinstr['Sandwich']['endpoint'][pervalue]
-		d[pathkey]['entrypage']=evaldict['cleanstring'][0]
-		d[pathkey]['length']=len(pathkey)
-		entryindex=evaldict['firstentry']
-		poi=algoinstr['Sandwich']['poi'][pervalue]
-		for k in keynames:
-			d[pathkey]['breakouts']=[k]=[keyvals[keynames.index(k)]]
-		temppoi=evalstring('o',evaldict['cleanstring'][1:entryindex],poi)
-		d[pathkey]['POIs']=','.join(temppoi)
+# def buildalgoresults(algo='d',pervalue=None,evaldict,algoinstr,arraytodistinct=None,distinctgrain=None):	
+# 	pathkey=','.join(substring)
+# 	
+# 	if algo=='SandPre': 
+# 		d['endpoint']=algoinstr['Sandwich']['endpoint'][pervalue]
+# 		d[pathkey]['entrypage']=evaldict['cleanstring'][0]
+# 		d[pathkey]['length']=len(pathkey)
+# 		entryindex=evaldict['firstentry']
+# 		poi=algoinstr['Sandwich']['poi'][pervalue]
+# 		for k in keynames:
+# 			d[pathkey]['breakouts']=[k]=[keyvals[keynames.index(k)]]
+# 		temppoi=evalstring('o',evaldict['cleanstring'][1:entryindex],poi)
+# 		d[pathkey]['POIs']=','.join(temppoi)
 # 
 # def fillalgovisits(algo='d',evaldict,algodict):	
 # 	
