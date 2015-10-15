@@ -35,7 +35,7 @@ instructions=json.loads(open('vtmininginstructions.json').read())
             
 # print 'instructions', json.dumps(instructions)
             
-db = create_engine("postgresql+psycopg2://LI:PW@IP:PORT/DW")
+db = create_engine("postgresql+psycopg2://tableau:LineGraphMinionChart@10.211.26.100:5439/ancestry")
 db_con=db.connect()
 
 # algo=instructions["algorithm"]["type"]
@@ -106,7 +106,7 @@ def createjson(t,instructions):
 			pagelist+=','
 
 			evaldict=ma.evalstring(pagelist,instructions,'d',pervalue,row,None)
-# 			print 'evaldict',evaldict
+## 			print 'evaldict',evaldict
 			
 			gu.add(t,evaldict['strfordict'],'u',1,1,arraytodistinct,distinctgrain,None)
 			pagelist=','+str(row[pagecolindex])
@@ -118,7 +118,7 @@ def createjson(t,instructions):
 			print 'case4'
 			pagelist+=','
 			evaldict=ma.evalstring(pagelist,instructions,'d',pervalue,row,None)
-# 			print 'evaldict',evaldict
+## 			print 'evaldict',evaldict
 
 			gu.add(t,evaldict['strfordict'],'u',1,1,arraytodistinct,distinctgrain,None)
 			
