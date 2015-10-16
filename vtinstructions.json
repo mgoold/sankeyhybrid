@@ -8,7 +8,7 @@
 "pervalue":"experience",
 "entrypoint":{"Control":402,"Phoenix":402},
 "algorithm":
-{"type":"Sandwich",
+{"type":"sandwich",
 	"endpoint":
 		{
 		"Control": 1926,
@@ -33,8 +33,8 @@
 		}
 },
 "textsearchinjects":{},                            
-"allresults":"select * from  a.markfvwtesters5 order by visitorid, visitnumber, datetime1",
-"getcount":"select count(*) from  a.markfvwtesters5"
+"allresults":"select * from  a.markfvwtesters6 order by visitorid, visitnumber, datetime1",
+"getcount":"select count(*) from  a.markfvwtesters6"
 }
 
 
