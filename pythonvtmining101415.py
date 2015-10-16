@@ -29,17 +29,17 @@ def tree(): return defaultdict(tree)
 def dicts(t): return {k: dicts(t[k]) for k in t}
 
 visittree=autoviv()
-algodict=autoviv()
+analysisdict=autoviv()
 
 instructions=json.loads(open('vtmininginstructions.json').read())  
             
 # print 'instructions', json.dumps(instructions)
             
-db = create_engine("postgresql+psycopg2://LI:PW@IP:PORT/DW")
+db = create_engine("postgresql+psycopg2://tableau:LineGraphMinionChart@10.211.26.100:5439/ancestry")
 db_con=db.connect()
 
-# algo=instructions["algorithm"]["type"]
-# algoinstr=instructions["algorithm"]
+algo=instructions["algorithm"]["type"]
+algoinstr=instructions["algorithm"]
 pervalue=instructions["pervalue"]
 selstr=instructions["allresults"]
 ctstr=instructions["getcount"]
@@ -108,6 +108,15 @@ def createjson(t,instructions):
 			evaldict=ma.evalstring(pagelist,instructions,'d',pervalue,row,None)
 ## 			print 'evaldict',evaldict
 			
+# 			NOW BUILD ANALYSIS RESULTS DICT
+# 			NOTE THAT IT DOESN'T MATTER IF YOU BUILD THIS BEFORE THE FULL JSON
+			
+# 			print 'algo is', algo, 'len is', len(evaldict['sandwichpath'])
+			
+			if algo=='sandwich' and len(evaldict['sandwichpath'])>0:
+				print 'building sand dict'
+				ma.buildalgoresults(analysisdict,evaldict,instructions,'sandpre',pervalue,arraytodistinct=None,distinctgrain=None)
+					
 			gu.add(t,evaldict['strfordict'],'u',1,1,arraytodistinct,distinctgrain,None)
 			pagelist=','+str(row[pagecolindex])
 		else:
@@ -151,7 +160,12 @@ createjson(visittree,instructions)
 
 with open('vtminingtestoutput.json', 'wb') as fp:
     json.dump(visittree, fp)
+    
+fp.close()
 
+with open('vtanalyticsoutput.json', 'wb') as fp:
+    json.dump(analysisdict, fp)
+    
 fp.close()
 
 
