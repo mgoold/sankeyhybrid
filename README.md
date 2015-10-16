@@ -106,3 +106,7 @@ STEP 4: run your python code from your terminal. This is likely to present 2 cha
 
 STEP 5: look at your output. Depending on the algo you've called, you should get at minimum a json of all the user paths taken in your data, plus other jsons or output depnding on the algo you've specified.
 
+STILL TO BE DONE:
+1. write findreplace algo for page indices.
+2. write algo to generate visit array for specified paths
+3. write routine to write out results to sql table (or excel, whatever).
