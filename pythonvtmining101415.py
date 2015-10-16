@@ -35,7 +35,7 @@ instructions=json.loads(open('vtmininginstructions.json').read())
             
 # print 'instructions', json.dumps(instructions)
             
-db = create_engine("postgresql+psycopg2://tableau:LineGraphMinionChart@10.211.26.100:5439/ancestry")
+db = create_engine("postgresql+psycopg2://LI:PW@IP:PORT/DW")
 db_con=db.connect()
 
 algo=instructions["algorithm"]["type"]
