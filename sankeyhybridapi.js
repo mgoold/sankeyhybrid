@@ -171,6 +171,11 @@ function clone(obj) {
     });
   }
 
+    var highestnode=0;
+    var lowestnode=0;
+    var highestrank=0;
+    var lowestrank=0;
+
   function computeNodeDepths(iterations) {
     var nodesByBreadth = d3.nest()
         .key(function(d) {return d.x; }).sortKeys(d3.ascending)
@@ -183,21 +188,25 @@ function clone(obj) {
 	var alpha = 1;
 
     initializeNodeDepth();
-//  		relaxLeftToRight2(alpha);  
-//     	relaxRightToLeft3(alpha);
+  		relaxLeftToRight2(alpha);  
+  			console.log('highestrank',highestrank,'highestnode',highestnode);
+     	relaxRightToLeft3(alpha);
+     	
+     	
 // 		resolveCollisions();
 
 // 		resolveCollisions();
       
-    for (var alpha = 1; iterations >0; --iterations) {
-          relaxLeftToRight2(alpha);
-      resolveCollisions();
-//       relaxRightToLeft2(alpha *= .99);
-//       resolveCollisions();
-      relaxRightToLeft3(alpha *= .99);
-      resolveCollisions();
-// 
-    }
+    //~ for (var alpha = 1; iterations >0; --iterations) {
+          //~ relaxLeftToRight2(alpha);
+      //~ resolveCollisions();
+//~ //       relaxRightToLeft2(alpha *= .99);
+//~ //       resolveCollisions();
+      //~ relaxRightToLeft3(alpha *= .99);
+      //~ resolveCollisions();
+//~ // 
+    //~ }
+    
 
     function initializeNodeDepth() {
 		var ky = d3.min(nodesByBreadth, function(nodes) {  //ky is the multiplying factor
@@ -205,6 +214,9 @@ function clone(obj) {
 		return (size[1] - (nodes.length - 1) * nodePadding) / d3.sum(nodes, value);
 		});
 
+		var rankcount=0;
+		var prevnodecount=0;
+								
 		nodesByBreadth.forEach(function(nodes)	{		
 	
 			nodes.forEach(function(node, i) { //assume for now that i is iterator				
@@ -217,9 +229,9 @@ function clone(obj) {
 						node.targeti=obj.source.i;
 					});					
 				} else {
-					node.i=i;
 					node.targeti=i;					
 				};
+				node.i=i;
 			});	
 			nodes.sort(
 				firstBy(function (a, b) { return a.targeti-b.targeti; })
@@ -229,61 +241,81 @@ function clone(obj) {
 			var templinkrank = 0;
 			var temptarget = 0;
 			var j=0;
-			var rankSum=0;			
+			var rankSum=0;		
+			var nodecount=-1;
+			
+			nodes.forEach(function (node) {++nodecount;});
+				
+			//~ console.log('nodecount',nodecount);	
+				
 			nodes.forEach(function(node, i) { //assume for now that i is iterator	
 				if (j==0) {
 					templinkrank = j;
 					temptarget = node.targeti;
-					j+=1;
+					if (node.targeti==0) {
+						highestnode=node.node;
+						highestrank=rankcount;
+						}
+					//~ j+=1;
 				} else {
 					if (temptarget == node.targeti) {
 						templinkrank += 1;
-						j+=1;
+						//~ j+=1;
 					} else {
-						temptarget == node.targeti;
+						temptarget = node.targeti;
 						templinkrank=0;
-						j=0;
+						//~ j=0;
 					}
 				}
+								
+				if (i==nodecount) {
+					//~ console.log('processing max node',i, node.node,nodecount,node.targeti,prevnodecount);
+					if (node.targeti==prevnodecount) {
+						lowestnode=node.node;
+						lowestrank=rankcount;
+					} 
+					prevnodecount=nodecount;
+				}
+				
 				node.i=i;
 				node.y=i;
 				node.templinkrank=templinkrank;
-			});			
-		});
+				j+=1;			
+			});		
+			
+			rankcount+=1;
 
+		});
+					
 		links.forEach(function(link) {
 			link.dy = link.value * ky;
 		});
 					
     }
 
+
+
 	var firstY, temprankSum;
 
-// 			rankSum += (nodes.length-2) * nodePadding
-
 	function relaxLeftToRight2(alpha) {
-// 		console.log('relaxLeftToRight2');
 	  nodesByBreadth.forEach(function(nodes, breadth) {
 		nodes.sort(
 			firstBy(function (a, b) { return a.targeti-b.targeti; })
 			.thenBy(function (a, b) { return b.value-a.value; })
 		);
+		
 		nodes.forEach(function(node) {
 		  if (node.sourceLinks.length>0) {
-
 			var firstY=0, ranksum=0;
 			node.sourceLinks.forEach(function(obj) {
-				console.log('obj',obj.target);
 				if (obj.target.templinkrank==0) {
 					firstY=obj.target.y;
 				} 
 				ranksum +=obj.target.dy;			
 			});
-			console.log('args',firstY,ranksum);
 			ranksum += ((node.sourceLinks.length-1) * nodePadding)
 			node.ranksum=ranksum;   
-			node.y = (((firstY+ranksum)/2)-node.dy/2);  
-			console.log('node',node, node.y);       	
+			node.y = (((firstY+ranksum)/2)-node.dy/2);      	
 		  }
 		});
 	  });
@@ -320,47 +352,61 @@ function clone(obj) {
 
  	function relaxRightToLeft3(alpha) {
 			
-			nodesByBreadth.slice().reverse().forEach(function(subnodes) {
+		nodesByBreadth.slice().reverse().forEach(function(subnodes) {
 
-				subnodes.sort(
-					firstBy(function (a, b) { return a.targeti-b.targeti; })
-					.thenBy(function (a, b) { return b.value-a.value; })
-				);
-
-				subnodes.forEach(function(node) {
-					if (node.templinkrank==0) {
-						var currnodedy=node.dy;
-						var tempY, tempdy, ranksum=0;	
-						node.targetLinks.forEach(function(obj) {
-				
-						//set y of current node relative to source node
-							tempy=obj.source.y;
-							tempdy=obj.source.dy;
-							ranksum=obj.source.ranksum;	
-// 							console.log('sourcenodey', obj.source.name,tempy,tempdy,ranksum);
-
-							node.y=((tempy+tempdy)/2)-(ranksum/2);
-							tempy=node.y+currnodedy;
+				var j=0;
+				if (j<=highestrank) {
+					
+					subnodes.sort(
+						firstBy(function (a, b) { return a.targeti-b.targeti; })
+						.thenBy(function (a, b) { return b.value-a.value; })
+					);
+		
+					var tempy=0;
+					
+					subnodes.forEach(function(node) {
+						console.log('node',node.node);
+						//	if node is top node and highest node, then set it at 0 + padding
+						if (node.node==highestnode) {
+							console.log('highestnode');
+							node.y=nodePadding;
+							tempy=node.y+node.dy+nodePadding;
+						} else if (node.i==0) {
+							console.log('node.i==0');
+							if (node.sourceLinks.length>0) {
+								var firstY=0;
+								node.sourceLinks.forEach(function(obj) {
+									if (obj.target.templinkrank==0) {
+										firstY=obj.target.y;
+									} 		
+								});
+							}
+							node.y=(firstY+(node.ranksum/2))-(node.dy/2)
+							tempy=node.y+node.dy+nodePadding;								
+						} else {
+							console.log('lowernodes');
 							
-// 							console.log('rank0nodey', node.name,node.y);
+							if (node.sourceLinks.length>0) {
+								var firstY=0;
+								node.sourceLinks.forEach(function(obj) {
+									if (obj.target.templinkrank==0) {
+										console.log('targetynode',obj.target.node);
+										firstY=obj.target.y;
+									} 		
+								});
+								console.log('firsty',firstY,'ranksum',node.ranksum,'node.dy',node.dy);
+								node.y=(firstY+(node.ranksum/2))-(node.dy/2)
+								tempy=node.y+node.dy+nodePadding;	
+							} else {
+								node.y=tempy;
+								tempy=node.y+node.dy+nodePadding;							
+							}
 
-							if (obj.source.sourceLinks.length>1) {
-								var tempsourcelinks=obj.source.sourceLinks;
-								var linklength=tempsourcelinks.length;
-
-								tempsourcelinks.forEach(function(templink) { 
-									if (templink.target.templinkrank!=0) {
-										var tempi=templink.target.node;
-// 										console.log('targetnode',nodes[tempi]);
-										nodes[tempi].y=tempy+nodePadding;
-										tempy=nodes[tempi].y+nodes[tempi].dy;
-// 										console.log('notrank0nodey', nodes[tempi].name,tempy,tempdy,ranksum);
-									}
-								});										
-							}	
-						});										
-					}
-				});
+						}														
+					});
+					
+					j+=1;
+				}
 		});
 	}
       
@@ -461,3 +507,4 @@ function clone(obj) {
 
   return sankey;
 };
+
