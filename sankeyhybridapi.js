@@ -86,8 +86,7 @@ function clone(obj) {
     return link;
   };
 
-  // Populate the sourceLinks and targetLinks for each node.
-  // Also, if the source and target are not objects, assume they are indices.
+
   function computeNodeLinks() {
     nodes.forEach(function(node) {
       node.sourceLinks = [];
@@ -112,7 +111,7 @@ function clone(obj) {
     });
   }
 
-  // Compute the value (size) of each node by summing the associated links.
+
   function computeNodeValues() {
     nodes.forEach(function(node) {
       node.value = Math.max(
@@ -122,10 +121,7 @@ function clone(obj) {
     });
   }
 
-  // Iteratively assign the breadth (x-position) for each node.
-  // Nodes are assigned the maximum breadth of incoming neighbors plus one;
-  // nodes with no incoming links are assigned breadth zero, while
-  // nodes with no outgoing links are assigned the maximum breadth.
+
   function computeNodeBreadths() {
     var remainingNodes = nodes,
         nextNodes,
@@ -145,7 +141,9 @@ function clone(obj) {
     }
 
     //
-//     moveSinksRight(x);
+//     moveSinksRight(x); --disabling this call is all that's required to give the chart
+//	the "each step right is a visit" look of a visits chart
+ 
     scaleNodeBreadths((width - nodeWidth) / (x - 1));
   }
 
@@ -184,33 +182,28 @@ function clone(obj) {
         	//creates a new values field that contains all the info fitting the key
 
 	console.log('nodesbybreadth',nodesByBreadth);
-
-	var alpha = 1;
-
-    initializeNodeDepth();
-    relaxRightToLeft2(alpha);
-  		//~ relaxLeftToRight2(alpha);  
-     	relaxRightToLeft3(alpha);
-     	
-     	
-// 		resolveCollisions();
-
-// 		resolveCollisions();
-      
-    //~ for (var alpha = 1; iterations >0; --iterations) {
-          //~ relaxLeftToRight2(alpha);
-      //~ resolveCollisions();
-//~ //       relaxRightToLeft2(alpha *= .99);
-//~ //       resolveCollisions();
-      //~ relaxRightToLeft3(alpha *= .99);
-      //~ resolveCollisions();
-//~ // 
-    //~ }
+	console.log('margin',size[1],margin.bottom);
+	
+    initializeNodeDepth();   
     
+    //~ while the lowest node is still below frame
+		//~ reduce nodepadding and rerun
+		
+	for (i2 = 0; i2 < 80; i2++)  {
+    
+	    relaxRightToLeft2();
+	    relaxRightToLeft3();
+	 	    
+	    nodePadding*=.99
+	    
+	    var bottommost=nodes[lowestnode].y+nodes[lowestnode].dy
+	    console.log (size[1]-margin.bottom,bottommost);
+    
+	}
+     	
 
     function initializeNodeDepth() {
-		var ky = d3.min(nodesByBreadth, function(nodes) {  //ky is the multiplying factor
-		// (1- (total # of nodes * node padding))
+		var ky = d3.min(nodesByBreadth, function(nodes) {  
 		return (size[1] - (nodes.length - 1) * nodePadding) / d3.sum(nodes, value);
 		});
 
@@ -247,8 +240,6 @@ function clone(obj) {
 			
 			nodes.forEach(function (node) {++nodecount;});
 				
-			//~ console.log('nodecount',nodecount);	
-				
 			nodes.forEach(function(node, i) { //assume for now that i is iterator	
 				if (j==0) {
 					templinkrank = j;
@@ -257,20 +248,16 @@ function clone(obj) {
 						highestnode=node.node;
 						highestrank=rankcount;
 						}
-					//~ j+=1;
 				} else {
 					if (temptarget == node.targeti) {
 						templinkrank += 1;
-						//~ j+=1;
 					} else {
 						temptarget = node.targeti;
 						templinkrank=0;
-						//~ j=0;
 					}
 				}
 								
 				if (i==nodecount) {
-					//~ console.log('processing max node',i, node.node,nodecount,node.targeti,prevnodecount);
 					if (node.targeti==prevnodecount) {
 						lowestnode=node.node;
 						lowestrank=rankcount;
@@ -298,33 +285,8 @@ function clone(obj) {
 
 	var firstY, temprankSum;
 
-	function relaxLeftToRight2(alpha) {
-	  nodesByBreadth.forEach(function(nodes, breadth) {
-		nodes.sort(
-			firstBy(function (a, b) { return a.targeti-b.targeti; })
-			.thenBy(function (a, b) { return b.value-a.value; })
-		);
-		
-		nodes.forEach(function(node) {
-		  if (node.sourceLinks.length>0) {
-			var firstY=0, ranksum=0;
-			node.sourceLinks.forEach(function(obj) {
-				if (obj.target.templinkrank==0) {
-					firstY=obj.target.y;
-				} 
-				ranksum +=obj.target.dy;			
-			});
-			ranksum += ((node.sourceLinks.length-1) * nodePadding)
-			node.ranksum=ranksum;   
-			node.y = (((firstY+ranksum)/2)-node.dy/2);      	
-		  }
-		});
-	  });
 
-	}
-
-
-	function relaxRightToLeft2(alpha) {
+	function relaxRightToLeft2() {
 			
 			nodesByBreadth.slice().reverse().forEach(function(subnodes) {
 
@@ -352,7 +314,7 @@ function clone(obj) {
 		});
 	}
 
- 	function relaxRightToLeft3(alpha) {
+ 	function relaxRightToLeft3() {
 			
 		nodesByBreadth.slice().reverse().forEach(function(subnodes) {
 
@@ -367,26 +329,12 @@ function clone(obj) {
 					var tempy=0;
 					
 					subnodes.forEach(function(node) {
-						console.log('node',node.node);
-						//	if node is top node and highest node, then set it at 0 + padding
 
 						if (node.node==highestnode) {
-							//~ console.log('highestnode');
 							node.y=nodePadding;
 							tempy=node.y+node.ranksum+nodePadding;
-						//~ } else if (node.i==0) {
-								//~ var firstY=0;
-								//~ var endY=0;
-								//~ node.sourceLinks.forEach(function(obj) {
-									//~ if (obj.target.templinkrank==0) {
-										//~ firstY=obj.target.y;										
-									//~ } 		
-									//~ endY=obj.target.y+obj.target.dy
-								//~ });
-								//~ node.y=firstY+((firstY-endY)/2)-(node.dy/2)
-								//~ tempy=node.y+node.ranksum+nodePadding;								
+							
 						} else {
-							//~ console.log('lowernodes');
 							
 							if (node.sourceLinks.length>0) {
 								var firstY=0;
@@ -412,63 +360,12 @@ function clone(obj) {
 		});
 	}
       
-    function resolveCollisions() {
-      nodesByBreadth.forEach(function(nodes) {
-        var node, dy, y0 = 0, n = nodes.length,i;
 
-        // Push any overlapping nodes down.
-// 		nodes.sort(
-// 			firstBy(function (a, b) { return a.targeti-b.targeti; })
-// 			.thenBy(function (a, b) { return b.value-a.value; })
-// 		);
-
-		nodes.forEach(function(node) {
-		  if (node.sourceLinks.length>0) {
-			var firstY=0, ranksum=0;
-			node.sourceLinks.forEach(function(obj) {
-				if (obj.target.templinkrank==0) {
-					firstY=obj.target.y;
-				} 
-				ranksum +=obj.target.dy;
-			});
-
-			ranksum += ((node.sourceLinks.length-1) * nodePadding)
-				    
-			node.y = (((firstY+ranksum)/2)-node.dy/2);         	
-		  }
-		});
-		
-        for (i = 0; i < n; ++i) {
-          node = nodes[i];
-		  
-          dy = y0 - node.y;
-          if (dy > 0) node.y += dy;
-          y0 = node.y + node.dy + nodePadding;
-        }
-       
-        // If the bottommost node goes outside the bounds, push it back up.
-        dy = y0 - nodePadding - size[1];
-        if (dy > 0) {
-          y0 = node.y -= dy;
-
-          // Push any overlapping nodes back up.
-          for (i = n - 2; i >= 0; --i) {
-            node = nodes[i];
-            dy = node.y + node.dy + nodePadding - y0;
-            if (dy > 0) node.y -= dy;
-            y0 = node.y;
-          	}
-        }
-    
-        
-      });
-    }
-
-//     function ascendingDepth(a, b) {
-// 	  return a.i - b.i;
-// //       return a.y - b.y;
-//     }
   }
+  
+  //~ pseudo for adjusting node spacing:
+  //~ for a start, reduce nodepadding, rerun until both upper and lower nodes are within frame
+  //~ finally, divide remaining distance between upper and lower nodes fr
 
   function computeLinkDepths() {
     nodes.forEach(function(node) {
