@@ -188,8 +188,8 @@ function clone(obj) {
 	var alpha = 1;
 
     initializeNodeDepth();
-  		relaxLeftToRight2(alpha);  
-  			console.log('highestrank',highestrank,'highestnode',highestnode);
+    relaxRightToLeft2(alpha);
+  		//~ relaxLeftToRight2(alpha);  
      	relaxRightToLeft3(alpha);
      	
      	
@@ -233,6 +233,7 @@ function clone(obj) {
 				};
 				node.i=i;
 			});	
+			
 			nodes.sort(
 				firstBy(function (a, b) { return a.targeti-b.targeti; })
 				.thenBy(function (a, b) { return b.value-a.value; })
@@ -333,18 +334,19 @@ function clone(obj) {
 			);
 
 			subnodes.forEach(function(node) {
-				if (node.sourceLinks.length>0) {
-					var firstY=0, ranksum=0;					
+				var ranksum=0;	
+				node.hassourcelinks=0;
+				if (node.sourceLinks.length>0) {				
 					node.sourceLinks.forEach(function(obj) {
-						if (obj.target.templinkrank==0) {
-							firstY=obj.target.y;
-						} 
-						ranksum +=obj.target.dy;				
+						ranksum +=obj.target.ranksum;				
 					});
-				
 					ranksum += ((node.sourceLinks.length-1) * nodePadding)
-					node.y = (((firstY+ranksum)/2)-(node.dy/2)) * alpha;  
+					node.ranksum=ranksum;
+					node.hassourcelinks=1;
+				} else {
+					node.ranksum=node.dy;
 				}
+
 			});
 			
 		});
@@ -367,39 +369,39 @@ function clone(obj) {
 					subnodes.forEach(function(node) {
 						console.log('node',node.node);
 						//	if node is top node and highest node, then set it at 0 + padding
+
 						if (node.node==highestnode) {
-							console.log('highestnode');
+							//~ console.log('highestnode');
 							node.y=nodePadding;
-							tempy=node.y+node.dy+nodePadding;
-						} else if (node.i==0) {
-							console.log('node.i==0');
-							if (node.sourceLinks.length>0) {
-								var firstY=0;
-								node.sourceLinks.forEach(function(obj) {
-									if (obj.target.templinkrank==0) {
-										firstY=obj.target.y;
-									} 		
-								});
-							}
-							node.y=(firstY+(node.ranksum/2))-(node.dy/2)
-							tempy=node.y+node.dy+nodePadding;								
+							tempy=node.y+node.ranksum+nodePadding;
+						//~ } else if (node.i==0) {
+								//~ var firstY=0;
+								//~ var endY=0;
+								//~ node.sourceLinks.forEach(function(obj) {
+									//~ if (obj.target.templinkrank==0) {
+										//~ firstY=obj.target.y;										
+									//~ } 		
+									//~ endY=obj.target.y+obj.target.dy
+								//~ });
+								//~ node.y=firstY+((firstY-endY)/2)-(node.dy/2)
+								//~ tempy=node.y+node.ranksum+nodePadding;								
 						} else {
-							console.log('lowernodes');
+							//~ console.log('lowernodes');
 							
 							if (node.sourceLinks.length>0) {
 								var firstY=0;
+								var endY=0;
 								node.sourceLinks.forEach(function(obj) {
 									if (obj.target.templinkrank==0) {
-										console.log('targetynode',obj.target.node);
-										firstY=obj.target.y;
+										firstY=obj.target.y;										
 									} 		
+									endY=Math.max(obj.target.y+obj.target.dy,endY);
 								});
-								console.log('firsty',firstY,'ranksum',node.ranksum,'node.dy',node.dy);
-								node.y=(firstY+(node.ranksum/2))-(node.dy/2)
-								tempy=node.y+node.dy+nodePadding;	
+								node.y=firstY+((endY-firstY)/2)-(node.dy/2)
+								tempy=node.y+node.ranksum+nodePadding;	
 							} else {
 								node.y=tempy;
-								tempy=node.y+node.dy+nodePadding;							
+								tempy=node.y+node.ranksum+nodePadding;							
 							}
 
 						}														
