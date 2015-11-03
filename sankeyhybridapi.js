@@ -140,7 +140,6 @@ function clone(obj) {
       ++x;
     }
 
-    //
 //     moveSinksRight(x); --disabling this call is all that's required to give the chart
 //	the "each step right is a visit" look of a visits chart
  
@@ -182,25 +181,31 @@ function clone(obj) {
         	//creates a new values field that contains all the info fitting the key
 
 	console.log('nodesbybreadth',nodesByBreadth);
-	console.log('margin',size[1],margin.bottom);
 	
     initializeNodeDepth();   
+   
     
-    //~ while the lowest node is still below frame
-		//~ reduce nodepadding and rerun
-		
-	for (i2 = 0; i2 < 80; i2++)  {
-    
-	    relaxRightToLeft2();
-	    relaxRightToLeft3();
-	 	    
-	    nodePadding*=.99
+	var bottommost=nodes[lowestnode].y+nodes[lowestnode].dy;
+
+	for (i2=0; i2=100; i2++)  {
+    	    
+    	positionnodes(nodePadding,nodePadding);    
+    	    
+	    bottommost=nodes[lowestnode].y+nodes[lowestnode].dy;	    
+	    if (bottommost<size[1]) { 
+			var highnodepos=(nodes[highestnode].y+(size[1]-bottommost))/2;
+			positionnodes(nodePadding,highnodepos); 
+			break;
+		}
 	    
-	    var bottommost=nodes[lowestnode].y+nodes[lowestnode].dy
-	    console.log (size[1]-margin.bottom,bottommost);
+		nodePadding*=.99
     
+	}	
+	
+	function positionnodes(nodePadding,highnodepos) {
+		relaxRightToLeft2(nodePadding);
+	    relaxRightToLeft3(nodePadding,highnodepos);
 	}
-     	
 
     function initializeNodeDepth() {
 		var ky = d3.min(nodesByBreadth, function(nodes) {  
@@ -286,7 +291,7 @@ function clone(obj) {
 	var firstY, temprankSum;
 
 
-	function relaxRightToLeft2() {
+	function relaxRightToLeft2(nodePadding) {
 			
 			nodesByBreadth.slice().reverse().forEach(function(subnodes) {
 
@@ -314,8 +319,7 @@ function clone(obj) {
 		});
 	}
 
- 	function relaxRightToLeft3() {
-			
+ 	function relaxRightToLeft3(nodePadding,highnodepos) {
 		nodesByBreadth.slice().reverse().forEach(function(subnodes) {
 
 				var j=0;
@@ -331,9 +335,8 @@ function clone(obj) {
 					subnodes.forEach(function(node) {
 
 						if (node.node==highestnode) {
-							node.y=nodePadding;
-							tempy=node.y+node.ranksum+nodePadding;
-							
+							node.y=highnodepos;
+							tempy=node.y+node.ranksum+nodePadding;							
 						} else {
 							
 							if (node.sourceLinks.length>0) {
